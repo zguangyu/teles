@@ -53,6 +53,14 @@ void option_parser::add_option(const std::string &name, const char short_name,
 
 void option_parser::parse(int ac, char *av[])
 {
-    po::store(po::parse_command_line(ac, av, desc), vm);
-    po::notify(vm);
+    try {
+        po::store(po::parse_command_line(ac, av, desc), vm);
+        po::notify(vm);
+    } catch (std::exception &e) {
+        std::cerr << e.what() << std::endl;
+        print_help();
+    }
+
+    if (vm.count("help"))
+        print_help();
 }

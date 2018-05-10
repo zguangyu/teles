@@ -1,6 +1,7 @@
 #ifndef TELES_OPTION_PARSER_HPP
 #define TELES_OPTION_PARSER_HPP
 
+#include <cstdlib>
 #include <iostream>
 #include <string>
 #include <boost/program_options.hpp>
@@ -9,6 +10,13 @@ namespace po = boost::program_options;
 
 namespace teles {
 
+/**
+ * option_parser: a wrapper for boost::program_options
+ * 
+ * This class will handle help option for you.
+ * 
+ * TODO: implement positional argument
+ */
 class option_parser
 {
 public:
@@ -66,8 +74,12 @@ public:
         return !!vm.count(name);
     }
 
+    /**
+     * print the help message to stderr and quit.
+     */
     void print_help() const {
-        std::cout << caption << desc << std::endl;
+        std::cerr << caption << desc << std::endl;
+        std::exit(1);
     }
 
 private:
