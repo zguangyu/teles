@@ -1,7 +1,7 @@
 file(GLOB TELES_SOURCES *.cpp)
 add_library(teles SHARED ${TELES_SOURCES})
 
-target_link_libraries(teles 
+target_link_libraries(teles
     PUBLIC cppzmq
     PUBLIC Boost::boost
     PUBLIC Boost::program_options

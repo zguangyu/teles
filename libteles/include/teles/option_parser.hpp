@@ -4,6 +4,7 @@
 #include <cstdlib>
 #include <iostream>
 #include <string>
+#include <type_traits>
 #include <boost/program_options.hpp>
 
 namespace po = boost::program_options;
@@ -12,48 +13,164 @@ namespace teles {
 
 /**
  * option_parser: a wrapper for boost::program_options
- * 
+ *
  * This class will handle help option for you.
- * 
+ *
  * TODO: implement positional argument
  */
-class option_parser
+class OptionParser
 {
 public:
-    option_parser() : option_parser("") {}
-    option_parser(const std::string &caption) : caption(caption) {
+    OptionParser() : OptionParser("") {}
+    OptionParser(const std::string &caption) : caption(caption) {
         desc.add_options()("help", "print this help");
     }
 
     /**
      * Add an option choice without default value.
-     * 
-     * \sa add_option(const std::string&, const char, const std::string&, const T&)
-     * 
+     *
+     * \sa addOption(const std::string&, const char, const std::string&, const T&, T&)
+     *
      */
     template <typename T>
-    void add_option(const std::string &name, const char short_name,
-            const std::string &description);
+    void addOption(const std::string &name, char short_name,
+            const std::string &description, T &storage)
+    {
+        std::ostringstream os;
+        os << name;
+        if (short_name) {
+            os << ',' << short_name;
+        }
+
+        po::typed_value<T> *semantic;
+        semantic = po::value<T>(&storage);
+
+        auto option = boost::shared_ptr<po::option_description>(
+            new po::option_description(os.str().c_str(), semantic,
+                description.c_str()));
+
+        desc.add(option);
+    }
+
+    template <typename T>
+    void addOption(const std::string &name, char short_name,
+            const std::string &description)
+    {
+        std::ostringstream os;
+        os << name;
+        if (short_name) {
+            os << ',' << short_name;
+        }
+
+        po::typed_value<T> *semantic;
+        semantic = po::value<T>();
+
+        auto option = boost::shared_ptr<po::option_description>(
+            new po::option_description(os.str().c_str(), semantic,
+                description.c_str()));
+
+        desc.add(option);
+    }
 
     /**
-     * Add an option choice without default value.
-     * 
-     * An option without default value is a required option. The template type
-     * is the type of the argument, bool for no argument, vector for multiple
-     * arguments.
-     * 
+     * Add an option choice with default value.
+     *
+     * The template type is the type of the argument, bool for no argument,
+     * vector for multiple arguments.
+     *
      * \param[in]  name          long option name
      * \param[in]  short_name    short option name, '\0' to omit
      * \param[in]  description   help string
-     * \param[in]  default_value default value of the option, can be ignored.
+     * \param[in]  default_value default value of the option, can be ignored
+     * \param[out] storage       variable reference to store value
      */
     template <typename T>
-    void add_option(const std::string &name, const char short_name,
-            const std::string &description, const T &default_value);
+    void addOption(const std::string &name, char short_name,
+            const std::string &description, const T &default_value, T &storage)
+    {
+        std::ostringstream os;
+        os << name;
+        if (short_name) {
+            os << ',' << short_name;
+        }
+
+        po::typed_value<T> *semantic;
+        semantic = po::value<T>(&storage)->default_value(default_value);
+
+        auto option = boost::shared_ptr<po::option_description>(
+            new po::option_description(os.str().c_str(), semantic,
+                description.c_str()));
+
+        desc.add(option);
+    }
+
+
+    template <typename T>
+    void addOption(const std::string &name, char short_name,
+            const std::string &description, const T &default_value)
+    {
+        std::ostringstream os;
+        os << name;
+        if (short_name) {
+            os << ',' << short_name;
+        }
+
+        po::typed_value<T> *semantic;
+        semantic = po::value<T>()->default_value(default_value);
+
+        auto option = boost::shared_ptr<po::option_description>(
+            new po::option_description(os.str().c_str(), semantic,
+                description.c_str()));
+
+        desc.add(option);
+    }
+
+
+    void addSwitch(const std::string &name, char short_name,
+            const std::string &description)
+    {
+        std::ostringstream os;
+        os << name;
+        if (short_name) {
+            os << ',' << short_name;
+        }
+
+        po::typed_value<bool> *semantic;
+        semantic = po::bool_switch();
+
+        auto option = boost::shared_ptr<po::option_description>(
+            new po::option_description(os.str().c_str(), semantic,
+                description.c_str()));
+
+        desc.add(option);
+    }
+
+    /**
+     * add a flag switch without argument
+     */
+    void addSwitch(const std::string &name, char short_name,
+            const std::string &description, bool &storage)
+    {
+        std::ostringstream os;
+        os << name;
+        if (short_name) {
+            os << ',' << short_name;
+        }
+
+        po::typed_value<bool> *semantic;
+        semantic = po::bool_switch(&storage);
+
+        auto option = boost::shared_ptr<po::option_description>(
+            new po::option_description(os.str().c_str(), semantic,
+                description.c_str()));
+
+        desc.add(option);
+    }
+
 
     /**
      * Parse argument
-     * 
+     *
      * \param[in] ac argc
      * \param[in] av argv
      */
@@ -61,25 +178,24 @@ public:
 
     /**
      * get the option argument
-     * 
+     *
      * It's your responsibility to insure the type is correct.
-     * 
+     *
      */
     template <typename T>
-    const T& get_option(const std::string &name) const {
+    const T& getOption(const std::string &name) const {
         return vm[name].as<T>();
     }
 
-    bool has_option(const std::string &name) const {
+    bool hasOption(const std::string &name) const {
         return !!vm.count(name);
     }
 
     /**
      * print the help message to stderr and quit.
      */
-    void print_help() const {
-        std::cerr << caption << desc << std::endl;
-        std::exit(1);
+    void printHelp() const {
+        std::cerr << caption << std::endl << desc << std::endl;
     }
 
 private:
