@@ -12,7 +12,7 @@ namespace po = boost::program_options;
 namespace teles {
 
 /**
- * option_parser: a wrapper for boost::program_options
+ * \brief OptionParser is a wrapper for boost::program_options
  *
  * This class will handle help option for you.
  *
@@ -22,12 +22,17 @@ class OptionParser
 {
 public:
     OptionParser() : OptionParser("") {}
+    /**
+     * \brief constructor of OptionParser
+     *
+     * \param[in] caption  the header of the help string
+     */
     OptionParser(const std::string &caption) : caption(caption) {
         desc.add_options()("help", "print this help");
     }
 
     /**
-     * Add an option choice without default value.
+     * \brief Add an option choice without default value.
      *
      * \sa addOption(const std::string&, const char, const std::string&, const T&, T&)
      *
@@ -73,7 +78,7 @@ public:
     }
 
     /**
-     * Add an option choice with default value.
+     * \brief Add an option choice with default value.
      *
      * The template type is the type of the argument, bool for no argument,
      * vector for multiple arguments.
@@ -146,7 +151,7 @@ public:
     }
 
     /**
-     * add a flag switch without argument
+     * \brief add a flag switch without argument
      */
     void addSwitch(const std::string &name, char short_name,
             const std::string &description, bool &storage)
@@ -169,7 +174,7 @@ public:
 
 
     /**
-     * Parse argument
+     * \brief Parse argument
      *
      * \param[in] ac argc
      * \param[in] av argv
@@ -177,7 +182,7 @@ public:
     void parse(int ac, char *av[]);
 
     /**
-     * get the option argument
+     * \brief get the option argument
      *
      * It's your responsibility to insure the type is correct.
      *
@@ -192,7 +197,7 @@ public:
     }
 
     /**
-     * print the help message to stderr and quit.
+     * \brief print the help message to stderr and quit.
      */
     void printHelp() const {
         std::cerr << caption << std::endl << desc << std::endl;

@@ -5,6 +5,7 @@ target_link_libraries(teles
     PUBLIC cppzmq
     PUBLIC Boost::boost
     PUBLIC Boost::program_options
+    PUBLIC libuv
 )
 
 target_include_directories(teles PUBLIC
