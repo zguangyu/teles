@@ -6,7 +6,7 @@
 
 using namespace teles;
 
-Daemon::Daemon(std::string name) : options(name), component_name(name)
+Daemon::Daemon(const std::string &name) : options(name), component_name(name)
 {
     options.addSwitch(std::string("daemon"), 'd', std::string("run as daemon"));
     if (name != "nameserver")
@@ -57,7 +57,7 @@ void Daemon::doDaemon()
 
 void Daemon::startLoop()
 {
-    loop = uv_default_loop();
+    auto loop = uv_default_loop();
 
     uv_run(loop, UV_RUN_DEFAULT);
 

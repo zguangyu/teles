@@ -9,12 +9,41 @@ namespace teles {
 class Daemon
 {
 public:
-    Daemon(std::string name);
+    /**
+     * \brief the constructor
+     *
+     * \param[in] name the name of the component, should be set from subclass
+     *
+     */
+    Daemon(const std::string &name);
+
+    /**
+     * \brief start program looping
+     *
+     * Always called from the main function
+     */
     void run(int argc, char *argv[]);
 
+    /**
+     * \brief return name of this component
+     */
+    const std::string& getName() const { return component_name; }
+
 protected:
+    /**
+     * \brief useful when you need to check something
+     */
+    virtual void onIdle() {}
+
+    /**
+     * \brief process options and set some flags
+     *
+     * This function is suitable for overriding
+     *
+     */
     virtual void processOptions();
-    OptionParser options;
+
+    OptionParser options; //< used to add option
 
 private:
     /**
@@ -33,8 +62,7 @@ private:
     void startLoop();
 
     bool is_daemon = false;
-    uv_loop_t *loop;
-    std::string component_name;
+    const std::string component_name;
 };
 
 }
