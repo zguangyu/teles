@@ -3,6 +3,7 @@
 
 #include <uv.h>
 #include <teles/option_parser.hpp>
+#include <teles/logger.hpp>
 
 namespace teles {
 
@@ -28,6 +29,8 @@ public:
      * \brief return name of this component
      */
     const std::string& getName() const { return component_name; }
+
+    const bool isDaemon() const { return is_daemon; }
 
 protected:
     /**

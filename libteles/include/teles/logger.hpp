@@ -1,6 +1,9 @@
+#ifndef TELES_LOGGER_HPP
+#define TELES_LOGGER_HPP
+
 #include <spdlog/spdlog.h>
 #include <memory>
-
+#include <teles/daemon.hpp>
 namespace teles {
 
 class Daemon;
@@ -13,6 +16,11 @@ public:
 private:
     std::shared_ptr<spdlog::logger> logger;
     std::weak_ptr<Daemon> daemon;
+    std::string name;
+    bool has_stdout = true;
 };
 
 }
+
+
+#endif // TELES_LOGGER_HPP
