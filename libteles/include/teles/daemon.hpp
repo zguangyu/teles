@@ -30,6 +30,11 @@ public:
      */
     const std::string& getName() const { return component_name; }
 
+    /**
+     * \brief return if it runs as daemon or not
+     *
+     * This is useful for checking stdio availability.
+     */
     const bool isDaemon() const { return is_daemon; }
 
 protected:

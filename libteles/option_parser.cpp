@@ -7,7 +7,7 @@
 namespace po = boost::program_options;
 using namespace teles;
 
-void OptionParser::parse(int ac, char *av[])
+void OptionParser::parseArgs(int ac, char *av[])
 {
     try {
         po::store(po::parse_command_line(ac, av, desc), vm);

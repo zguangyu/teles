@@ -3,6 +3,7 @@
 #include <unistd.h>
 
 #include <teles/daemon.hpp>
+#include "config.hpp"
 
 using namespace teles;
 
@@ -15,7 +16,7 @@ Daemon::Daemon(const std::string &name) : options(name), component_name(name)
 
 void Daemon::run(int argc, char *argv[])
 {
-    options.parse(argc, argv);
+    options.parseArgs(argc, argv);
     processOptions();
 
     if (is_daemon)
@@ -26,7 +27,7 @@ void Daemon::run(int argc, char *argv[])
 
 void Daemon::processOptions()
 {
-    if (options.hasOption("daemon"))
+    if (options.has("daemon"))
         is_daemon = true;
 }
 

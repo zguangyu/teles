@@ -1,0 +1,2 @@
+#cmakedefine TELES_ETC_PATH @TELES_ETC_PATH@
+#cmakedefine TELES_UDP_PORT @TELES_UDP_PORT@

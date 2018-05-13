@@ -179,7 +179,7 @@ public:
      * \param[in] ac argc
      * \param[in] av argv
      */
-    void parse(int ac, char *av[]);
+    void parseArgs(int ac, char *av[]);
 
     /**
      * \brief get the option argument
@@ -188,11 +188,14 @@ public:
      *
      */
     template <typename T>
-    const T& getOption(const std::string &name) const {
+    const T& get(const std::string &name) const {
         return vm[name].as<T>();
     }
 
-    bool hasOption(const std::string &name) const {
+    /**
+     * \brief check if it has option `name`
+     */
+    bool has(const std::string &name) const {
         return !!vm.count(name);
     }
 
