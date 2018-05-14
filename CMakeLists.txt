@@ -20,9 +20,7 @@ else()
 endif()
 
 option(TELES_TEST "Enable teles test" ON)
-option(TELES_UDP_PORT "The UDP port for zeromq discovery" "5670")
-set(CPPZMQ_BUILD_TESTS OFF CACHE BOOL "Enable cppzmq test")
-
+set(TELES_UDP_PORT "5670" CACHE STRING "The UDP port for zeromq discovery")
 
 add_subdirectory(deps)
 
@@ -39,3 +37,6 @@ if(TELES_TEST)
     enable_testing()
     add_subdirectory(test)
 endif()
+
+configure_file(Doxyfile.in ${PROJECT_SOURCE_DIR}/Doxyfile @ONLY)
+add_custom_target(doc doxygen Doxyfile WORKING_DIRECTORY ${PROJECT_SOURCE_DIR})
