@@ -20,6 +20,4 @@ target_include_directories(teles PUBLIC
     $<INSTALL_INTERFACE:include>
 )
 
-
-
-configure_file(config.hpp.in config.hpp)
+configure_file(config.hpp.in config.hpp @ONLY)
