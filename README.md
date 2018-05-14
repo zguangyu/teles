@@ -1,1 +1,1 @@
-# teles --- The Telescope Event System
+# teles — The Telescope Event System          {#mainpage}
