@@ -30,16 +30,14 @@ void Daemon::run(int argc, char *argv[])
 
     if (is_daemon)
         doDaemon();
-
     initSocket();
-
     startLoop();
 }
 
 void Daemon::processOptions()
 {
     if (options.has("daemon"))
-        is_daemon = true;
+        is_daemon = options.get<bool>("daemon");
 }
 
 void Daemon::doDaemon()
@@ -54,7 +52,6 @@ void Daemon::doDaemon()
 
     // parent process
     if (pid > 0) {
-        std::cout << "Fork to background" << std::endl;
         exit(EXIT_SUCCESS);
     }
 
@@ -74,6 +71,7 @@ void Daemon::doDaemon()
         exit(EXIT_SUCCESS);
     }
 
+    std::cout << "Fork to background" << std::endl;
     // redirect stdin, stdout, stderr to /dev/null
     int fd = open("/dev/null", O_RDWR);
     dup2(fd, 0);
@@ -87,6 +85,7 @@ void Daemon::doDaemon()
 
 void Daemon::startLoop()
 {
+    std::cout << "Start looping..." << std::endl;
     uv_run(loop, UV_RUN_DEFAULT);
     uv_loop_close(loop);
 }
@@ -94,6 +93,7 @@ void Daemon::startLoop()
 void Daemon::initSocket()
 {
     zyre_node = zyre_new(component_name.c_str());
+    zyre_set_verbose(zyre_node);
 
     // set udp port
     if (options.has("port"))
@@ -101,16 +101,15 @@ void Daemon::initSocket()
     else
         zyre_set_port(zyre_node, TELES_UDP_PORT);
 
+    zyre_start(zyre_node);
+
     if (options.has("site"))
         zyre_join(zyre_node, options.get<std::string>("site").c_str());
     else
         zyre_join(zyre_node, "teles");
 
     void *sock = zsock_resolve(zyre_socket(zyre_node));
-    int zyre_fd;
-    size_t option_len;
-    zmq_getsockopt(sock, ZMQ_FD, &zyre_fd, &option_len);
-
+    int zyre_fd = zsock_fd(sock);
     uv_main_poll = uv_add_fd(loop, zyre_fd, Daemon::zyreProcess, UV_READABLE);
 }
 
