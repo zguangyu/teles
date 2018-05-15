@@ -10,8 +10,7 @@ using namespace teles;
 Daemon::Daemon(const std::string &name) : options(name), component_name(name)
 {
     options.addSwitch(std::string("daemon"), 'd', std::string("run as daemon"));
-    if (name != "nameserver")
-        options.addOption<std::string>("nameserver", 's', "address (ip:port) of nameserver");
+
 }
 
 void Daemon::run(int argc, char *argv[])
@@ -47,6 +46,22 @@ void Daemon::doDaemon()
         exit(EXIT_SUCCESS);
     }
 
+    // start new session
+    if (setsid()==-1) {
+        std::cerr << "failed to become a session leader while"
+            "daemonising(errno=" << errno << ")" << std::endl;
+    }
+
+    // fork again
+    signal(SIGHUP,SIG_IGN); // TODO: install a signal processor here
+    pid=fork();
+    if (pid == -1) {
+        std::cerr << "Fail to fork" << std::endl;
+        exit(EXIT_FAILURE);
+    } else if (pid > 0) {
+        exit(EXIT_SUCCESS);
+    }
+
     // redirect stdin, stdout, stderr to /dev/null
     int fd = open("/dev/null", O_RDWR);
     dup2(fd, 0);
@@ -54,6 +69,8 @@ void Daemon::doDaemon()
     dup2(fd, 2);
     if (fd > 2)
         close(fd);
+
+    chdir("/");
 }
 
 void Daemon::startLoop()
