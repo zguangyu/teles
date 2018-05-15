@@ -1,16 +1,26 @@
+#include <vector>
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <unistd.h>
 
 #include <teles/daemon.hpp>
+#include <teles/helpers.hpp>
 #include "config.hpp"
 
 using namespace teles;
 
+Daemon *Daemon::self;
+
 Daemon::Daemon(const std::string &name) : options(name), component_name(name)
 {
-    options.addSwitch(std::string("daemon"), 'd', std::string("run as daemon"));
+    options.addSwitch("daemon", 'd', "run as daemon");
+    options.addOption<int>("port", 'p', "udp port for discovery");
+    options.addOption<std::string>("interface", 'i', "interface name for connection");
+    options.addOption<std::string>("site", 'i', "site name");
 
+    loop = uv_default_loop();
+
+    self = this;
 }
 
 void Daemon::run(int argc, char *argv[])
@@ -20,6 +30,8 @@ void Daemon::run(int argc, char *argv[])
 
     if (is_daemon)
         doDaemon();
+
+    initSocket();
 
     startLoop();
 }
@@ -75,9 +87,34 @@ void Daemon::doDaemon()
 
 void Daemon::startLoop()
 {
-    auto loop = uv_default_loop();
-
     uv_run(loop, UV_RUN_DEFAULT);
-
     uv_loop_close(loop);
+}
+
+void Daemon::initSocket()
+{
+    zyre_node = zyre_new(component_name.c_str());
+
+    // set udp port
+    if (options.has("port"))
+        zyre_set_port(zyre_node, options.get<int>("port"));
+    else
+        zyre_set_port(zyre_node, TELES_UDP_PORT);
+
+    if (options.has("site"))
+        zyre_join(zyre_node, options.get<std::string>("site").c_str());
+    else
+        zyre_join(zyre_node, "teles");
+
+    void *sock = zsock_resolve(zyre_socket(zyre_node));
+    int zyre_fd;
+    size_t option_len;
+    zmq_getsockopt(sock, ZMQ_FD, &zyre_fd, &option_len);
+
+    uv_main_poll = uv_add_fd(loop, zyre_fd, Daemon::zyreProcess, UV_READABLE);
+}
+
+void Daemon::zyreProcess(uv_poll_t *handle, int status, int events)
+{
+
 }

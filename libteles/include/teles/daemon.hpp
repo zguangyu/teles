@@ -4,6 +4,7 @@
 #include <uv.h>
 #include <teles/option_parser.hpp>
 #include <teles/logger.hpp>
+#include <zyre.h>
 
 namespace teles {
 
@@ -63,14 +64,33 @@ private:
     void doDaemon();
 
     /**
-     * \brief start libuv loop
+     * \brief start libuv main loop
      *
      * It will initialize the loop variable
      */
     void startLoop();
 
+    /**
+     * \brief initialize zyre socket
+     */
+    void initSocket();
+
+    /**
+     * \brief Zyre message process
+     */
+    static void zyreProcess(uv_poll_t *handle, int status, int events);
+
     bool is_daemon = false;
     const std::string component_name;
+
+    uv_loop_t *loop;
+    std::shared_ptr<uv_poll_t> uv_main_poll;
+    zyre_t *zyre_node;
+
+    /**
+     * This is a trick for libuv callback to access Daemon object.
+     */
+    static Daemon *self;
 };
 
 }
