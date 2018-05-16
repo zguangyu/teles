@@ -19,6 +19,8 @@ public:
      */
     Daemon(const std::string &name);
 
+    ~Daemon();
+
     /**
      * \brief start program looping
      *
@@ -80,13 +82,16 @@ private:
     /**
      * \brief Zyre message process
      */
-    static void zyreProcess(uv_poll_t *handle, int status, int events);
+    static void zyreProcess(uv_idle_t *handle);
+
+    static void cleanupAndExit(uv_signal_t *handle, int signum);
 
     bool is_daemon = false;
     const std::string component_name;
 
     uv_loop_t *loop;
-    std::shared_ptr<uv_poll_t> uv_main_poll;
+    std::shared_ptr<uv_idle_t> uv_zyre_handler;
+    std::shared_ptr<uv_signal_t> uv_sigint_handler;
     zyre_t *zyre_node;
 
     /**

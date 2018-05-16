@@ -18,7 +18,7 @@ Daemon::Daemon(const std::string &name) : options(name), component_name(name)
     options.addOption<int>("port", 'p', "udp port for discovery");
     options.addOption<std::string>("interface", 'i', "interface name for connection");
     options.addOption<std::string>("site", 'i', "site name");
-    options.addSwitch("debug", '\n', "debug mode (verbose zyre)");
+    options.addSwitch("debug", '\0', "debug mode (verbose zyre)");
     options.addSwitch("version", 'v', "print version");
     self = this;
 }
@@ -97,8 +97,18 @@ void Daemon::doDaemon()
 
 void Daemon::startLoop()
 {
+    // fallback to use idle handler to poll zyre
+    uv_zyre_handler = std::make_shared<uv_idle_t>();
+    uv_idle_init(loop, uv_zyre_handler.get());
+    uv_idle_start(uv_zyre_handler.get(), Daemon::zyreProcess);
+
+    uv_sigint_handler = std::make_shared<uv_signal_t>();
+    uv_signal_init(loop, uv_sigint_handler.get());
+    uv_signal_start(uv_sigint_handler.get(), Daemon::cleanupAndExit, SIGINT);
+
     std::cout << "Start looping..." << std::endl;
     uv_run(loop, UV_RUN_DEFAULT);
+
     uv_loop_close(loop);
 }
 
@@ -122,19 +132,41 @@ void Daemon::initSocket()
     else
         zyre_join(zyre_node, "teles");
 
+    zclock_sleep(250); // wait zyre for initialization
+
     zsock_t *sock = zyre_socket(zyre_node);
     // The fd is a socket on mac but it is a pipe on linux
     int zyre_fd = zsock_fd(sock);
 
-    uv_main_poll = uv_add_fd(loop, zyre_fd, Daemon::zyreProcess, UV_READABLE, this);
+    // TODO: can't poll the fd from libuv.
 }
 
-void Daemon::zyreProcess(uv_poll_t *handle, int status, int events)
+void Daemon::zyreProcess(uv_idle_t *handle)
 {
-    std::cout << "In zyreProcess" << std::endl;
+    zmq_pollitem_t items[1];
+    zsock_t *sock = zyre_socket(self->zyre_node);
+    items[0].socket = zsock_resolve(sock);
+    items[0].events = ZMQ_POLLIN;
+    int rc = zmq_poll(items, 1, 0);
+    assert (rc >= 0);
+    if (!items[0].revents)
+        return;
+
     auto zyre_event = zyre_event_new(self->zyre_node);
     auto event_type = zyre_event_type(zyre_event);
     std::cout << event_type << std::endl;
 
     zyre_event_destroy(&zyre_event);
+}
+
+Daemon::~Daemon()
+{
+    std::cout << "Clean up..." << std::endl;
+    zyre_destroy(&zyre_node);
+}
+
+void Daemon::cleanupAndExit(uv_signal_t *handler, int signum)
+{
+    std::cout << "Catch signal " << signum << std::endl;
+    uv_stop(self->loop);
 }
