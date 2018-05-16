@@ -1,6 +1,7 @@
 #include <vector>
 #include <fcntl.h>
 #include <sys/stat.h>
+#include <sys/types.h>
 #include <unistd.h>
 
 #include <teles/daemon.hpp>
@@ -17,9 +18,8 @@ Daemon::Daemon(const std::string &name) : options(name), component_name(name)
     options.addOption<int>("port", 'p', "udp port for discovery");
     options.addOption<std::string>("interface", 'i', "interface name for connection");
     options.addOption<std::string>("site", 'i', "site name");
-
-    loop = uv_default_loop();
-
+    options.addSwitch("debug", '\n', "debug mode (verbose zyre)");
+    options.addSwitch("version", 'v', "print version");
     self = this;
 }
 
@@ -30,12 +30,24 @@ void Daemon::run(int argc, char *argv[])
 
     if (is_daemon)
         doDaemon();
+
+    // [IMPORTANT] create loop after fork, or it will crash on mac.
+    loop = uv_default_loop();
     initSocket();
     startLoop();
 }
 
+const std::string Daemon::version() const
+{
+    return "teles v" TELES_VERSION;
+}
+
 void Daemon::processOptions()
 {
+    if (options.get<bool>("version")) {
+        std::cout << version() << std::endl;
+        exit(EXIT_SUCCESS);
+    }
     if (options.has("daemon"))
         is_daemon = options.get<bool>("daemon");
 }
@@ -93,7 +105,9 @@ void Daemon::startLoop()
 void Daemon::initSocket()
 {
     zyre_node = zyre_new(component_name.c_str());
-    zyre_set_verbose(zyre_node);
+
+    if (options.get<bool>("debug"))
+        zyre_set_verbose(zyre_node);
 
     // set udp port
     if (options.has("port"))
@@ -108,12 +122,19 @@ void Daemon::initSocket()
     else
         zyre_join(zyre_node, "teles");
 
-    void *sock = zsock_resolve(zyre_socket(zyre_node));
+    zsock_t *sock = zyre_socket(zyre_node);
+    // The fd is a socket on mac but it is a pipe on linux
     int zyre_fd = zsock_fd(sock);
-    uv_main_poll = uv_add_fd(loop, zyre_fd, Daemon::zyreProcess, UV_READABLE);
+
+    uv_main_poll = uv_add_fd(loop, zyre_fd, Daemon::zyreProcess, UV_READABLE, this);
 }
 
 void Daemon::zyreProcess(uv_poll_t *handle, int status, int events)
 {
+    std::cout << "In zyreProcess" << std::endl;
+    auto zyre_event = zyre_event_new(self->zyre_node);
+    auto event_type = zyre_event_type(zyre_event);
+    std::cout << event_type << std::endl;
 
+    zyre_event_destroy(&zyre_event);
 }

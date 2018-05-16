@@ -38,6 +38,8 @@ public:
      */
     const bool isDaemon() const { return is_daemon; }
 
+    const std::string version() const;
+
 protected:
     /**
      * \brief useful when you need to check something
