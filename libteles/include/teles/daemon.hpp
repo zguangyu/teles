@@ -87,7 +87,9 @@ private:
     static void cleanupAndExit(uv_signal_t *handle, int signum);
 
     bool is_daemon = false;
-    const std::string component_name;
+    const std::string component_type;
+    std::string component_name;
+    std::string group_name;
 
     uv_loop_t *loop;
     std::shared_ptr<uv_idle_t> uv_zyre_handler;

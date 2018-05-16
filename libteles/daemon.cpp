@@ -12,7 +12,7 @@ using namespace teles;
 
 Daemon *Daemon::self;
 
-Daemon::Daemon(const std::string &name) : options(name), component_name(name)
+Daemon::Daemon(const std::string &name) : options(name), component_type(name)
 {
     options.addSwitch("daemon", 'd', "run as daemon");
     options.addOption<int>("port", 'p', "udp port for discovery");
@@ -48,8 +48,10 @@ void Daemon::processOptions()
         std::cout << version() << std::endl;
         exit(EXIT_SUCCESS);
     }
-    if (options.has("daemon"))
-        is_daemon = options.get<bool>("daemon");
+    is_daemon = options.get<bool>("daemon");
+
+    component_name = options.get<std::string>("site", component_type);
+    group_name = options.get<std::string>("site", "teles");
 }
 
 void Daemon::doDaemon()
@@ -162,6 +164,7 @@ void Daemon::zyreProcess(uv_idle_t *handle)
 Daemon::~Daemon()
 {
     std::cout << "Clean up..." << std::endl;
+    zyre_stop(zyre_node);
     zyre_destroy(&zyre_node);
 }
 

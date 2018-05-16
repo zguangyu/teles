@@ -192,6 +192,14 @@ public:
         return vm[name].as<T>();
     }
 
+    template <typename T>
+    const T& get(const std::string &name, const T &default_value) const {
+        if (has(name))
+            return vm[name].as<T>();
+        else
+            return default_value;
+    }
+
     /**
      * \brief check if it has option `name`
      */
