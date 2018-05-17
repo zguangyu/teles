@@ -19,7 +19,12 @@ public:
      */
     Daemon(const std::string &name);
 
-    ~Daemon();
+    /**
+     * \brief destructor
+     *
+     * This should be virtual
+     */
+    virtual ~Daemon();
 
     /**
      * \brief start program looping
@@ -80,20 +85,24 @@ private:
     void initSocket();
 
     /**
-     * \brief Zyre message process
+     * \brief libuv idle callback for Zyre message
      */
     static void zyreProcess(uv_idle_t *handle);
 
+    /**
+     * \brief libuv idle callback for SIGINT
+     */
     static void cleanupAndExit(uv_signal_t *handle, int signum);
 
-    bool is_daemon = false;
+    bool is_daemon = false; //< this can be replaced with options.get<bool>("daemon")
     const std::string component_type;
-    std::string component_name;
-    std::string group_name;
+    std::string component_name; //< the component name for zyre
+    std::string group_name; //< the group name for zyre
 
     uv_loop_t *loop;
-    std::shared_ptr<uv_idle_t> uv_zyre_handler;
-    std::shared_ptr<uv_signal_t> uv_sigint_handler;
+    std::shared_ptr<uv_idle_t> uv_zyre_handler; //< the idle handler created with make_shared
+    std::shared_ptr<uv_signal_t> uv_sigint_handler; //< the SIGINT handler created with make_shared
+
     zyre_t *zyre_node;
 
     /**
