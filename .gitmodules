@@ -9,4 +9,4 @@
 	url = https://github.com/gabime/spdlog.git
 [submodule "deps/zyre"]
 	path = deps/zyre
-	url = https://github.com/zguangyu/zyre.git
+	url = https://github.com/zeromq/zyre.git
